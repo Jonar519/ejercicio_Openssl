@@ -2,39 +2,103 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cliente WebSocket Real-Time</title>
+    <title>Cliente WebSocket Seguro</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; background: #f4f4f9; }
-        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 50px; }
-        .data { font-weight: bold; color: #007bff; }
+        body { font-family: monospace; padding: 20px; }
+        .conectado { color: green; }
+        .desconectado { color: red; }
+        .datos { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Monitor de Sensores (WSS)</h2>
-        <p>ID del Sensor: <span id="id" class="data">Esperando...</span></p>
-        <p>Nombre: <span id="nombre" class="data">Esperando...</span></p>
-        <p>Temperatura: <span id="temp" class="data">Esperando...</span></p>
+    <h1>🔌 Cliente WebSocket WSS</h1>
+    
+    <div>
+        <button onclick="conectar()">🔌 Conectar</button>
+        <button onclick="desconectar()">❌ Desconectar</button>
+        <button onclick="enviarMensaje()">📤 Enviar mensaje</button>
+    </div>
+
+    <p>Estado: <span id="estado" class="desconectado">Desconectado</span></p>
+    <p>URL: wss://localhost:8080</p>
+    
+    <div id="datos" class="datos">
+        Esperando conexión...
     </div>
 
     <script>
-        // 1. Conectarse al servidor que creamos en Node.js
-        const socket = new WebSocket('ws://localhost:8080');
+        let socket = null;
+        const datosDiv = document.getElementById('datos');
+        const estadoSpan = document.getElementById('estado');
 
-        socket.onmessage = (event) => {
-            // 2. Recibir el JSON y convertirlo a objeto JS
-            const datos = JSON.parse(event.data);
-            
-            // 3. Actualizar la interfaz
-            document.getElementById('id').innerText = datos.id;
-            document.getElementById('nombre').innerText = datos.nombre;
-            document.getElementById('temp').innerText = datos.temperatura;
-            
-            console.log("Datos recibidos:", datos);
+        function conectar() {
+            try {
+                datosDiv.innerHTML = 'Conectando...';
+                
+                // IMPORTANTE: Usar wss:// para WebSocket Secure
+                socket = new WebSocket('wss://localhost:8080');
+                
+                // Para certificado autofirmado
+                socket.onerror = function(error) {
+                    console.error('Error:', error);
+                    datosDiv.innerHTML = '❌ Error de conexión. ¿Aceptaste el certificado?';
+                };
+
+                socket.onopen = function() {
+                    console.log('Conectado!');
+                    estadoSpan.innerHTML = 'Conectado';
+                    estadoSpan.className = 'conectado';
+                    datosDiv.innerHTML = '✅ Conectado al servidor<br>';
+                };
+
+                socket.onmessage = function(event) {
+                    console.log('Mensaje:', event.data);
+                    try {
+                        const datos = JSON.parse(event.data);
+                        datosDiv.innerHTML = '📦 Datos recibidos:<br>' + 
+                            JSON.stringify(datos, null, 2).replace(/\n/g, '<br>');
+                    } catch (e) {
+                        datosDiv.innerHTML = '📨 Mensaje: ' + event.data;
+                    }
+                };
+
+                socket.onclose = function() {
+                    console.log('Desconectado');
+                    estadoSpan.innerHTML = 'Desconectado';
+                    estadoSpan.className = 'desconectado';
+                    datosDiv.innerHTML = '❌ Conexión cerrada';
+                };
+
+            } catch (error) {
+                console.error('Error al conectar:', error);
+                datosDiv.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        function desconectar() {
+            if (socket) {
+                socket.close();
+            }
+        }
+
+        function enviarMensaje() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'ping',
+                    cliente: 'browser',
+                    timestamp: new Date().toISOString()
+                }));
+                datosDiv.innerHTML = '📤 Mensaje enviado';
+            } else {
+                alert('No conectado');
+            }
+        }
+
+        // Auto-conectar al cargar la página
+        window.onload = function() {
+            setTimeout(conectar, 1000);
         };
-
-        socket.onopen = () => console.log("¡Conectado al servidor!");
-        socket.onclose = () => alert("Conexión cerrada.");
     </script>
 </body>
 </html>

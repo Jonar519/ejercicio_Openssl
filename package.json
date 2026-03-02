@@ -1,16 +1,24 @@
 {
-  "name": "websocket",
+  "name": "websocket-seguro",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Ejemplo de WebSocket con OpenSSL",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kami1185/WebSocket-Http.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "ws": "^8.19.0"
-  }
+  "bugs": {
+    "url": "https://github.com/kami1185/WebSocket-Http/issues"
+  },
+  "homepage": "https://github.com/kami1185/WebSocket-Http#readme"
 }
