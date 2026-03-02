@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cliente WebSocket Real-Time</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; background: #f4f4f9; }
+        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 50px; }
+        .data { font-weight: bold; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Monitor de Sensores (WSS)</h2>
+        <p>ID del Sensor: <span id="id" class="data">Esperando...</span></p>
+        <p>Nombre: <span id="nombre" class="data">Esperando...</span></p>
+        <p>Temperatura: <span id="temp" class="data">Esperando...</span></p>
+    </div>
+
+    <script>
+        // 1. Conectarse al servidor que creamos en Node.js
+        const socket = new WebSocket('ws://localhost:8080');
+
+        socket.onmessage = (event) => {
+            // 2. Recibir el JSON y convertirlo a objeto JS
+            const datos = JSON.parse(event.data);
+            
+            // 3. Actualizar la interfaz
+            document.getElementById('id').innerText = datos.id;
+            document.getElementById('nombre').innerText = datos.nombre;
+            document.getElementById('temp').innerText = datos.temperatura;
+            
+            console.log("Datos recibidos:", datos);
+        };
+
+        socket.onopen = () => console.log("¡Conectado al servidor!");
+        socket.onclose = () => alert("Conexión cerrada.");
+    </script>
+</body>
+</html>
